@@ -1,0 +1,74 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Harman Kardon AVR 151S",
+        "description": "Control over Ethernet, with optional Broadlink wake from deep standby. Setup checks TCP only and never sends power commands.",
+        "data": {
+          "name": "Name",
+          "host": "IP address or hostname",
+          "port": "TCP port",
+          "wake_remote": "Broadlink remote (optional)",
+          "wake_device": "Learned device name in Broadlink",
+          "wake_command": "Learned Power On command",
+          "wake_timeout": "Wake timeout (seconds)"
+        },
+        "data_description": {
+          "name": "A name for this receiver in Home Assistant.",
+          "host": "Reserve the receiver's IP address in your router. Do not enter a URL.",
+          "port": "The AVR 151S Remote TCP port, normally 10025.",
+          "wake_remote": "Used only when Ethernet is unreachable. Learn a discrete Power On first.",
+          "wake_device": "Exactly the device value used with remote.learn_command.",
+          "wake_command": "Exactly the command value used with remote.learn_command. Never use a power toggle.",
+          "wake_timeout": "Maximum wait for TCP after the IR command. The IR command is sent once."
+        }
+      },
+      "reconfigure": {
+        "title": "Harman Kardon AVR 151S",
+        "description": "Control over Ethernet, with optional Broadlink wake from deep standby. Setup checks TCP only and never sends power commands.",
+        "data": {
+          "name": "Name",
+          "host": "IP address or hostname",
+          "port": "TCP port",
+          "wake_remote": "Broadlink remote (optional)",
+          "wake_device": "Learned device name in Broadlink",
+          "wake_command": "Learned Power On command",
+          "wake_timeout": "Wake timeout (seconds)"
+        },
+        "data_description": {
+          "name": "A name for this receiver in Home Assistant.",
+          "host": "Reserve the receiver's IP address in your router. Do not enter a URL.",
+          "port": "The AVR 151S Remote TCP port, normally 10025.",
+          "wake_remote": "Used only when Ethernet is unreachable. Learn a discrete Power On first.",
+          "wake_device": "Exactly the device value used with remote.learn_command.",
+          "wake_command": "Exactly the command value used with remote.learn_command. Never use a power toggle.",
+          "wake_timeout": "Maximum wait for TCP after the IR command. The IR command is sent once."
+        }
+      },
+      "offline": {
+        "title": "Receiver unreachable",
+        "description": "TCP connection failed. You can save a sleeping receiver with Broadlink, but the address and protocol have not been verified. No wake command will be sent. Submit to save anyway."
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect. Turn on the receiver, check host/port, or select Broadlink.",
+      "invalid_config": "Check the host, name and IR command fields."
+    },
+    "abort": {
+      "already_configured": "This host and port are already configured.",
+      "reconfigure_successful": "Configuration updated."
+    }
+  },
+  "entity": {
+    "button": {
+      "mute_toggle": {
+        "name": "Toggle mute"
+      }
+    },
+    "binary_sensor": {
+      "ethernet": {
+        "name": "Ethernet connectivity"
+      }
+    }
+  }
+}

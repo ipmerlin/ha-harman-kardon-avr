@@ -1,0 +1,13 @@
+{
+  "domain": "hk_avr",
+  "name": "Harman Kardon AVR 151S",
+  "codeowners": ["@ipmerlin"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/ipmerlin/ha-harman-kardon-avr",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/ipmerlin/ha-harman-kardon-avr/issues",
+  "requirements": [],
+  "version": "0.1.0"
+}
