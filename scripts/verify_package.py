@@ -18,7 +18,7 @@ with zipfile.ZipFile(path) as archive:
     for name in names:
         assert ".." not in Path(name).parts
         assert name.startswith("custom_components/hk_avr/") or name in (
-            "README.md", "LICENSE", "CHANGELOG.md", "VALIDATION.md", "hacs.json")
+            "README.md", "LICENSE", "CHANGELOG.md", "VALIDATION.md", "NETWORK_PROTOCOL.md", "hacs.json")
         assert "__pycache__" not in name and not name.endswith(".pyc")
         assert archive.read(name) == (ROOT / name).read_bytes()
     assert "custom_components/hk_avr/brand/icon.png" in names

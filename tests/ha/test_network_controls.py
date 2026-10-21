@@ -147,3 +147,23 @@ async def test_existing_mute_registry_entry_is_reused(hass, config_data):
         assert hass.states.get(old.entity_id) is not None
         assert len([e for e in entities if e.unique_id.endswith("_mute_toggle")]) == 1
         await hass.config_entries.async_unload(entry.entry_id)
+
+
+@pytest.mark.parametrize("remote_state", [None, "unavailable", "unknown"])
+async def test_missing_or_unavailable_broadlink_does_not_report_wake_success(
+    hass, config_data, remote_state,
+):
+    entry = MockConfigEntry(domain=DOMAIN, title="AVR", data={
+        **config_data, "wake_remote": "remote.test_broadlink",
+    })
+    entry.add_to_hass(hass)
+    with patch("custom_components.hk_avr.api.AvrClient.async_probe", return_value=False):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        if remote_state is not None:
+            hass.states.async_set("remote.test_broadlink", remote_state)
+        with pytest.raises(HomeAssistantError, match="missing or unavailable"):
+            await entry.runtime_data.async_command("power-on")
+        assert entry.runtime_data.data.power is None
+        assert entry.runtime_data.data.reachable is False
+        await hass.config_entries.async_unload(entry.entry_id)

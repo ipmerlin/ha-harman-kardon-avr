@@ -5,7 +5,7 @@ import logging
 from datetime import timedelta
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -37,6 +37,11 @@ class AvrCoordinator(DataUpdateCoordinator[Snapshot]):
         )
 
     async def _async_ir_wake(self) -> None:
+        remote = self.hass.states.get(self.entry.data[CONF_WAKE_REMOTE])
+        if remote is None or remote.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            raise HomeAssistantError(
+                "Configured Broadlink remote is missing or unavailable. Check the wake settings."
+            )
         try:
             async with asyncio.timeout(15):
                 await self.hass.services.async_call(

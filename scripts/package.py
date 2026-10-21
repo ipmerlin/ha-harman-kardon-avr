@@ -13,7 +13,7 @@ output.parent.mkdir(exist_ok=True)
 files = [p for p in COMPONENT.rglob("*")
          if p.is_file() and "__pycache__" not in p.parts and p.suffix != ".pyc"]
 files += [ROOT / filename for filename in (
-    "README.md", "LICENSE", "CHANGELOG.md", "VALIDATION.md", "hacs.json")]
+    "README.md", "LICENSE", "CHANGELOG.md", "VALIDATION.md", "NETWORK_PROTOCOL.md", "hacs.json")]
 with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED) as archive:
     for path in sorted(files):
         archive.write(path, path.relative_to(ROOT).as_posix())
