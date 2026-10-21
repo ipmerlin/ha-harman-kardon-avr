@@ -20,8 +20,12 @@
 - 10 тестов `tests/ha` на настоящем Home Assistant: здесь Windows/Python 3.12,
   без Linux/WSL/Docker; актуальный HA требует Python 3.14. Для них подготовлен
   отдельный Linux job в CI.
-- Hassfest и HACS validation: jobs подготовлены, но ещё не запущены.
+- Hassfest и HACS validation: workflow отправлен в GitHub Actions. На момент
+  подготовки релиза все четыре job остаются в очереди, результатов нет.
 - Установка в HA, обучение/отправка команд настоящим Broadlink и проверка на AVR.
-- Публикация GitHub-репозитория и релиза.
+
+Публичный репозиторий: https://github.com/ipmerlin/ha-harman-kardon-avr.
+Первый релиз публикуется как предварительный. Актуальные результаты CI:
+https://github.com/ipmerlin/ha-harman-kardon-avr/actions/workflows/checks.yml.
 
 Работа на физическом ресивере и прохождение CI пока не подтверждены.

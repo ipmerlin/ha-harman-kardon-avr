@@ -1,0 +1,4 @@
+{
+  "description": "Home Assistant integration for Harman Kardon AVR 151S with UI setup and Broadlink IR wake from deep standby",
+  "homepage": "https://github.com/ipmerlin/ha-harman-kardon-avr#readme"
+}
