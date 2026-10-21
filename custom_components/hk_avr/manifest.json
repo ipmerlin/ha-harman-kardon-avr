@@ -1,6 +1,7 @@
 {
   "domain": "hk_avr",
   "name": "Harman Kardon AVR 151S",
+  "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@ipmerlin"],
   "config_flow": true,
   "dependencies": [],
