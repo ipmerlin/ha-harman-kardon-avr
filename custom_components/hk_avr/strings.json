@@ -63,11 +63,69 @@
     "button": {
       "mute_toggle": {
         "name": "Toggle mute"
+      },
+      "play": {
+        "name": "Play"
+      },
+      "pause": {
+        "name": "Pause"
+      },
+      "next": {
+        "name": "Next track"
+      },
+      "previous": {
+        "name": "Previous track"
+      },
+      "forward": {
+        "name": "Fast forward"
+      },
+      "reverse": {
+        "name": "Rewind"
+      },
+      "up": {
+        "name": "Up"
+      },
+      "down": {
+        "name": "Down"
+      },
+      "left": {
+        "name": "Left"
+      },
+      "right": {
+        "name": "Right"
+      },
+      "ok": {
+        "name": "OK"
+      },
+      "back": {
+        "name": "Back"
+      },
+      "home": {
+        "name": "Home"
+      },
+      "info": {
+        "name": "Info"
+      },
+      "options": {
+        "name": "Options"
+      },
+      "sleep": {
+        "name": "Sleep / sleep timer"
       }
     },
     "binary_sensor": {
       "ethernet": {
         "name": "Ethernet connectivity"
+      }
+    },
+    "select": {
+      "source": {
+        "name": "Input"
+      }
+    },
+    "remote": {
+      "network_remote": {
+        "name": "Network remote"
       }
     }
   }

@@ -76,3 +76,22 @@ class AvrCoordinator(DataUpdateCoordinator[Snapshot]):
             ) from err
         finally:
             self.async_set_updated_data(self.controller.snapshot)
+
+    async def async_sequence(self, commands: list[str], delay: float) -> None:
+        """Run a network-only sequence; IR fallback is never used here."""
+        try:
+            await self.controller.async_sequence(commands, delay)
+        except AvrConnectionError as err:
+            raise HomeAssistantError(
+                "AVR network sequence stopped. A command may have executed; no retry was made."
+            ) from err
+        finally:
+            self.async_set_updated_data(self.controller.snapshot)
+
+    async def async_network_turn_on(self) -> None:
+        try:
+            await self.controller.async_network_turn_on()
+        except AvrConnectionError as err:
+            raise HomeAssistantError("AVR Ethernet is unavailable; no IR command was sent") from err
+        finally:
+            self.async_set_updated_data(self.controller.snapshot)

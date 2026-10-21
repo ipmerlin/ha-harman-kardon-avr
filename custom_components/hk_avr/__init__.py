@@ -9,7 +9,10 @@ from .api import AvrClient
 from .const import CONF_WAKE_REMOTE
 from .coordinator import AvrCoordinator
 
-PLATFORMS = [Platform.MEDIA_PLAYER, Platform.BUTTON, Platform.BINARY_SENSOR]
+PLATFORMS = [
+    Platform.MEDIA_PLAYER, Platform.BUTTON, Platform.BINARY_SENSOR,
+    Platform.REMOTE, Platform.SELECT,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

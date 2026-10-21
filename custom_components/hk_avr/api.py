@@ -11,9 +11,11 @@ import asyncio
 from contextlib import suppress
 from xml.etree.ElementTree import Element, SubElement, tostring
 
+from .const import REMOTE_COMMANDS
+
 COMMANDS = frozenset({
     "power-on", "power-off", "volume-up", "volume-down",
-    "mute-toggle", "source-selection",
+    "mute-toggle", "source-selection", *REMOTE_COMMANDS.values(),
 })
 
 

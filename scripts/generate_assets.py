@@ -39,6 +39,21 @@ DESCRIPTIONS_RU = {
     "wake_timeout": "Сколько ждать TCP после ИК-команды. ИК-команда отправляется один раз.",
 }
 
+BUTTON_LABELS = {
+    "mute_toggle": ("Toggle mute", "Переключить звук"),
+    "play": ("Play", "Воспроизведение"), "pause": ("Pause", "Пауза"),
+    "next": ("Next track", "Следующий трек"),
+    "previous": ("Previous track", "Предыдущий трек"),
+    "forward": ("Fast forward", "Перемотка вперёд"),
+    "reverse": ("Rewind", "Перемотка назад"),
+    "up": ("Up", "Вверх"), "down": ("Down", "Вниз"),
+    "left": ("Left", "Влево"), "right": ("Right", "Вправо"),
+    "ok": ("OK", "ОК"), "back": ("Back", "Назад"),
+    "home": ("Home", "Главное меню"), "info": ("Info", "Информация"),
+    "options": ("Options", "Параметры"),
+    "sleep": ("Sleep / sleep timer", "Sleep / таймер сна"),
+}
+
 
 def translation(ru=False):
     fields = FIELDS_RU if ru else FIELDS_EN
@@ -87,8 +102,10 @@ def translation(ru=False):
             },
         },
         "entity": {
-            "button": {"mute_toggle": {"name": "Переключить звук" if ru else "Toggle mute"}},
+            "button": {key: {"name": labels[int(ru)]} for key, labels in BUTTON_LABELS.items()},
             "binary_sensor": {"ethernet": {"name": "Доступность Ethernet" if ru else "Ethernet connectivity"}},
+            "select": {"source": {"name": "Вход" if ru else "Input"}},
+            "remote": {"network_remote": {"name": "Сетевой пульт" if ru else "Network remote"}},
         },
     }
 

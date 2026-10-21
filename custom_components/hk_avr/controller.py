@@ -7,7 +7,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, replace
 
 from .api import AvrClient, AvrConnectionError
-from .const import SOURCES
+from .const import REMOTE_COMMANDS, SOURCES
 
 
 class WakeRequiredError(Exception):
@@ -99,3 +99,20 @@ class AvrController:
                 self.snapshot = replace(self.snapshot, power="off", source=None)
             elif command == "source-selection":
                 self.snapshot = replace(self.snapshot, source=parameter)
+
+    async def async_network_turn_on(self) -> None:
+        """Explicit Ethernet-only power on, without Broadlink fallback."""
+        async with self._lock:
+            await self._send("power-on")
+            self.snapshot = replace(self.snapshot, power="on")
+
+    async def async_sequence(self, commands: list[str], delay: float = .4) -> None:
+        """Validate the entire sequence, serialize it and stop on the first failure."""
+        if (not 1 <= len(commands) <= 20 or not 0 <= delay <= 5
+                or any(command not in REMOTE_COMMANDS.values() for command in commands)):
+            raise ValueError("Invalid network remote sequence")
+        async with self._lock:
+            for index, command in enumerate(commands):
+                if index:
+                    await asyncio.sleep(delay)
+                await self._send(command)

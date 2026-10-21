@@ -31,6 +31,8 @@ class AvrMediaPlayer(AvrEntity, MediaPlayerEntity):
     _attr_supported_features = (
         MediaPlayerEntityFeature.TURN_ON | MediaPlayerEntityFeature.TURN_OFF
         | MediaPlayerEntityFeature.VOLUME_STEP | MediaPlayerEntityFeature.SELECT_SOURCE
+        | MediaPlayerEntityFeature.PLAY | MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.NEXT_TRACK | MediaPlayerEntityFeature.PREVIOUS_TRACK
     )
     _attr_source_list = list(SOURCES)
 
@@ -75,3 +77,15 @@ class AvrMediaPlayer(AvrEntity, MediaPlayerEntity):
 
     async def async_select_source(self, source: str) -> None:
         await self.coordinator.async_command("source-selection", source)
+
+    async def async_media_play(self) -> None:
+        await self.coordinator.async_command("play")
+
+    async def async_media_pause(self) -> None:
+        await self.coordinator.async_command("pause")
+
+    async def async_media_next_track(self) -> None:
+        await self.coordinator.async_command("next")
+
+    async def async_media_previous_track(self) -> None:
+        await self.coordinator.async_command("previous")

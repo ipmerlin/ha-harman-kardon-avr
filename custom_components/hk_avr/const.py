@@ -14,3 +14,28 @@ SOURCES = (
     "Disc", "STB", "Cable Sat", "Media Server", "DVR", "Radio",
     "TV", "USB", "Game", "Home Network", "AUX",
 )
+
+# Names verified in KarimGeiger/HKAPI lib/Actions; AVR 151S testing is pending.
+NETWORK_BUTTONS = {
+    "mute_toggle": ("mute-toggle", "mdi:volume-mute"),
+    "play": ("play", "mdi:play"),
+    "pause": ("pause", "mdi:pause"),
+    "next": ("next", "mdi:skip-next"),
+    "previous": ("previous", "mdi:skip-previous"),
+    "forward": ("forward", "mdi:fast-forward"),
+    "reverse": ("reverse", "mdi:rewind"),
+    "up": ("up", "mdi:arrow-up"),
+    "down": ("down", "mdi:arrow-down"),
+    "left": ("left", "mdi:arrow-left"),
+    "right": ("right", "mdi:arrow-right"),
+    "ok": ("ok", "mdi:check-circle-outline"),
+    "back": ("back", "mdi:arrow-u-left-top"),
+    "home": ("home", "mdi:home"),
+    "info": ("info", "mdi:information-outline"),
+    "options": ("options", "mdi:tune"),
+    "sleep": ("sleep", "mdi:power-sleep"),
+}
+REMOTE_COMMANDS = {
+    **{key: command for key, (command, _) in NETWORK_BUTTONS.items()},
+    "volume_up": "volume-up", "volume_down": "volume-down",
+}

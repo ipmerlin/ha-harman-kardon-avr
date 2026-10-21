@@ -17,7 +17,9 @@ async def test_online_platforms_and_unload(hass, config_data):
         await hass.async_block_till_done()
         registry = er.async_get(hass)
         entities = er.async_entries_for_config_entry(registry, entry.entry_id)
-        assert {e.domain for e in entities} == {"media_player", "button", "binary_sensor"}
+        assert {e.domain for e in entities} == {
+            "media_player", "button", "binary_sensor", "remote", "select",
+        }
         player = next(e.entity_id for e in entities if e.domain == "media_player")
         assert hass.states.get(player).state == "unknown"
         with patch("custom_components.hk_avr.api.AvrClient.async_send", new_callable=AsyncMock) as send:

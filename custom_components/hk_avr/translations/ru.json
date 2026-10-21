@@ -63,11 +63,69 @@
     "button": {
       "mute_toggle": {
         "name": "Переключить звук"
+      },
+      "play": {
+        "name": "Воспроизведение"
+      },
+      "pause": {
+        "name": "Пауза"
+      },
+      "next": {
+        "name": "Следующий трек"
+      },
+      "previous": {
+        "name": "Предыдущий трек"
+      },
+      "forward": {
+        "name": "Перемотка вперёд"
+      },
+      "reverse": {
+        "name": "Перемотка назад"
+      },
+      "up": {
+        "name": "Вверх"
+      },
+      "down": {
+        "name": "Вниз"
+      },
+      "left": {
+        "name": "Влево"
+      },
+      "right": {
+        "name": "Вправо"
+      },
+      "ok": {
+        "name": "ОК"
+      },
+      "back": {
+        "name": "Назад"
+      },
+      "home": {
+        "name": "Главное меню"
+      },
+      "info": {
+        "name": "Информация"
+      },
+      "options": {
+        "name": "Параметры"
+      },
+      "sleep": {
+        "name": "Sleep / таймер сна"
       }
     },
     "binary_sensor": {
       "ethernet": {
         "name": "Доступность Ethernet"
+      }
+    },
+    "select": {
+      "source": {
+        "name": "Вход"
+      }
+    },
+    "remote": {
+      "network_remote": {
+        "name": "Сетевой пульт"
       }
     }
   }

@@ -2,6 +2,7 @@
 
 import ast
 import json
+import runpy
 import sys
 import unittest
 from pathlib import Path
@@ -27,6 +28,8 @@ assert len(list((ROOT / "custom_components").iterdir())) == 1
 for lang in ("en", "ru"):
     translated = json.loads((COMPONENT / f"translations/{lang}.json").read_text(encoding="utf-8"))
     assert set(translated["config"]["step"]) == {"user", "reconfigure", "offline"}
+    constants = runpy.run_path(str(COMPONENT / "const.py"))
+    assert set(translated["entity"]["button"]) == set(constants["NETWORK_BUTTONS"])
 assert json.loads((COMPONENT / "strings.json").read_text()) == json.loads(
     (COMPONENT / "translations/en.json").read_text())
 suite = unittest.defaultTestLoader.discover(str(ROOT / "tests/offline"))

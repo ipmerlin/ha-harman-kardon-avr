@@ -19,6 +19,17 @@ controller = importlib.import_module("avr_offline.controller")
 
 
 class ProtocolTests(unittest.TestCase):
+    def test_extended_remote_wire_names(self):
+        for command in (
+            "play", "pause", "next", "previous", "forward", "reverse", "sleep",
+            "up", "down", "left", "right", "ok", "back", "home", "info", "options",
+        ):
+            with self.subTest(command=command):
+                body = api.build_request(command, "", 10025).split(b"\r\n\r\n", 1)[1]
+                root = ElementTree.fromstring(body)
+                self.assertEqual(root.findtext("avr/common/control/name"), command)
+                self.assertEqual(root.findtext("avr/common/control/para"), "")
+
     def test_utf8_content_length_and_xml_escaping(self):
         request = api.build_request("source-selection", "ТВ & <input>", 10025)
         header, body = request.split(b"\r\n\r\n", 1)
@@ -151,6 +162,45 @@ class ControllerTests(unittest.IsolatedAsyncioTestCase):
         await asyncio.gather(self.avr.async_turn_on(), self.avr.async_turn_on())
         self.wake.assert_awaited_once()
         self.client.async_send.assert_awaited_once_with("power-on", "")
+
+    async def test_network_power_on_does_not_fall_back_to_ir(self):
+        self.client.async_send.side_effect = api.AvrConnectionError
+        with self.assertRaises(api.AvrConnectionError):
+            await self.avr.async_network_turn_on()
+        self.wake.assert_not_awaited()
+        self.client.async_send.assert_awaited_once_with("power-on", "")
+
+    async def test_network_sequence_preserves_order(self):
+        await self.avr.async_sequence(["up", "ok", "back"], 0)
+        self.assertEqual([call.args for call in self.client.async_send.await_args_list],
+                         [("up", ""), ("ok", ""), ("back", "")])
+        self.wake.assert_not_awaited()
+
+    async def test_invalid_sequence_does_not_send_valid_prefix(self):
+        for commands in (["up", "factory-reset"], [], ["up"] * 21, ["power-on"]):
+            with self.assertRaises(ValueError):
+                await self.avr.async_sequence(commands, 0)
+        self.client.async_send.assert_not_awaited()
+
+    async def test_sequence_stops_after_uncertain_delivery(self):
+        self.client.async_send.side_effect = [None, api.AvrConnectionError, None]
+        with self.assertRaises(api.AvrConnectionError):
+            await self.avr.async_sequence(["up", "ok", "back"], 0)
+        self.assertEqual([call.args for call in self.client.async_send.await_args_list],
+                         [("up", ""), ("ok", "")])
+        self.wake.assert_not_awaited()
+        self.assertFalse(self.avr.snapshot.reachable)
+
+    async def test_concurrent_sequences_are_not_interleaved(self):
+        await asyncio.gather(self.avr.async_sequence(["up", "ok"], .001),
+                             self.avr.async_sequence(["down", "back"], .001))
+        self.assertEqual([call.args[0] for call in self.client.async_send.await_args_list],
+                         ["up", "ok", "down", "back"])
+
+    async def test_sleep_does_not_pretend_receiver_is_off(self):
+        await self.avr.async_network_turn_on()
+        await self.avr.async_command("sleep")
+        self.assertEqual(self.avr.snapshot.power, "on")
 
 
 class TcpTests(unittest.IsolatedAsyncioTestCase):
