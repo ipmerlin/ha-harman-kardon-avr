@@ -11,8 +11,39 @@ from custom_components.hk_avr.api import AvrConnectionError
 from custom_components.hk_avr.const import DOMAIN
 
 
+@pytest.mark.parametrize("wake_remote", [None, "remote.xiaomi_ir"])
+async def test_external_power_changes_follow_tcp_without_commands(hass, config_data, wake_remote):
+    data = dict(config_data)
+    if wake_remote:
+        data["wake_remote"] = wake_remote
+    entry = MockConfigEntry(domain=DOMAIN, title="AVR", data=data)
+    entry.add_to_hass(hass)
+    with (
+        patch("custom_components.hk_avr.api.AvrClient.async_probe", return_value=False) as probe,
+        patch("custom_components.hk_avr.api.AvrClient.async_send", new_callable=AsyncMock) as send,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        entities = er.async_entries_for_config_entry(er.async_get(hass), entry.entry_id)
+        player = next(e.entity_id for e in entities if e.domain == "media_player")
+        ethernet = next(e.entity_id for e in entities if e.domain == "binary_sensor")
+        wake = AsyncMock()
+        entry.runtime_data.controller.wake = wake
+        assert hass.states.get(player).state == "off"
+        for reachable in (True, False, True, False):
+            probe.return_value = reachable
+            await entry.runtime_data.async_refresh()
+            await hass.async_block_till_done()
+            assert hass.states.get(player).state == ("on" if reachable else "off")
+            assert hass.states.get(ethernet).state == ("on" if reachable else "off")
+            assert hass.states.get(player).attributes["state_feedback"] == "tcp_reachability"
+        send.assert_not_awaited()
+        wake.assert_not_awaited()
+        await hass.config_entries.async_unload(entry.entry_id)
+
+
 @pytest.mark.parametrize("service_domain", ["media_player", "remote"])
-async def test_successful_shutdown_remains_off_when_ethernet_sleeps(hass, config_data, service_domain):
+async def test_shutdown_state_follows_ethernet_not_last_command(hass, config_data, service_domain):
     entry = MockConfigEntry(domain=DOMAIN, title="AVR", data={
         **config_data, "wake_remote": "remote.xiaomi_ir",
     })
@@ -30,18 +61,20 @@ async def test_successful_shutdown_remains_off_when_ethernet_sleeps(hass, config
         await hass.services.async_call(service_domain, "turn_off", {"entity_id": target}, blocking=True)
         await hass.async_block_till_done()
         send.assert_awaited_once_with("power-off", "")
-        assert hass.states.get(player).state == "off"
+        # Sending power-off cannot override a still reachable TCP endpoint.
+        assert hass.states.get(player).state == "on"
+        assert hass.states.get(player).attributes["last_commanded_power"] == "off"
         for reachable in (False, True, False, True, False):
             probe.return_value = reachable
             await entry.runtime_data.async_refresh()
             await hass.async_block_till_done()
-            assert hass.states.get(player).state == "off"
+            assert hass.states.get(player).state == ("on" if reachable else "off")
             assert hass.states.get(player).attributes["network_reachable"] is reachable
             assert hass.states.get(ethernet).state == ("on" if reachable else "off")
         await hass.config_entries.async_unload(entry.entry_id)
 
 
-async def test_failed_shutdown_is_unknown_and_surfaces_transport_error(hass, config_data):
+async def test_failed_shutdown_is_off_when_tcp_fails_and_surfaces_error(hass, config_data):
     entry = MockConfigEntry(domain=DOMAIN, title="AVR", data={
         **config_data, "wake_remote": "remote.xiaomi_ir",
     })
@@ -57,6 +90,6 @@ async def test_failed_shutdown_is_unknown_and_surfaces_transport_error(hass, con
         with pytest.raises(HomeAssistantError, match="AVR TCP command failed"):
             await hass.services.async_call("media_player", "turn_off", {"entity_id": player}, blocking=True)
         await hass.async_block_till_done()
-        assert hass.states.get(player).state == "unknown"
+        assert hass.states.get(player).state == "off"
         assert hass.states.get(player).attributes["network_reachable"] is False
         await hass.config_entries.async_unload(entry.entry_id)

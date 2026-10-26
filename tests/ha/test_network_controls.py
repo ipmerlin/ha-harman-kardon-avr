@@ -50,7 +50,7 @@ async def test_playback_services(hass, network_receiver, action, wire):
         "media_player", action, {"entity_id": ids["receiver"]}, blocking=True,
     )
     send.assert_awaited_once_with(wire, "")
-    assert hass.states.get(ids["receiver"]).state == "unknown"
+    assert hass.states.get(ids["receiver"]).state == "on"
 
 
 async def test_source_picker_stays_in_sync_with_media_player(hass, network_receiver):

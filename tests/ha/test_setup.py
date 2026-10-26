@@ -21,7 +21,7 @@ async def test_online_platforms_and_unload(hass, config_data):
             "media_player", "button", "binary_sensor", "remote", "select",
         }
         player = next(e.entity_id for e in entities if e.domain == "media_player")
-        assert hass.states.get(player).state == "unknown"
+        assert hass.states.get(player).state == "on"
         with patch("custom_components.hk_avr.api.AvrClient.async_send", new_callable=AsyncMock) as send:
             await hass.services.async_call(
                 "media_player", "volume_up", {"entity_id": player}, blocking=True,
@@ -50,7 +50,7 @@ async def test_sleeping_player_remains_callable_and_dispatches_broadlink(hass, c
     registry = er.async_get(hass)
     entities = er.async_entries_for_config_entry(registry, entry.entry_id)
     player = next(e.entity_id for e in entities if e.domain == "media_player")
-    assert hass.states.get(player).state == "unknown"
+    assert hass.states.get(player).state == "off"
     assert hass.states.get(player).attributes["network_reachable"] is False
     assert received == []
     with patch("custom_components.hk_avr.api.AvrClient.async_probe", side_effect=[False, True]):
@@ -66,9 +66,14 @@ async def test_sleeping_player_remains_callable_and_dispatches_broadlink(hass, c
     await hass.config_entries.async_unload(entry.entry_id)
 
 
-async def test_unreachable_without_wake_retries_setup(hass, config_data):
+async def test_unreachable_without_wake_loads_as_off(hass, config_data):
     entry = MockConfigEntry(domain=DOMAIN, data=config_data)
     entry.add_to_hass(hass)
     with patch("custom_components.hk_avr.api.AvrClient.async_probe", return_value=False):
-        assert not await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state == ConfigEntryState.SETUP_RETRY
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        entities = er.async_entries_for_config_entry(er.async_get(hass), entry.entry_id)
+        player = next(e.entity_id for e in entities if e.domain == "media_player")
+        assert hass.states.get(player).state == "off"
+        assert entry.state == ConfigEntryState.LOADED
+        await hass.config_entries.async_unload(entry.entry_id)

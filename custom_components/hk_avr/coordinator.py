@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class AvrCoordinator(DataUpdateCoordinator[Snapshot]):
-    """Polling measures network reachability, never invents receiver state."""
+    """Poll TCP reachability, used by the player as its power-state proxy."""
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry, client: AvrClient) -> None:
         super().__init__(hass, _LOGGER, name=DOMAIN, config_entry=entry,

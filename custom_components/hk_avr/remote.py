@@ -21,7 +21,7 @@ async def async_setup_entry(
 
 
 class AvrNetworkRemote(AvrEntity, RemoteEntity):
-    """Represent the network keypad, with optimistic power feedback."""
+    """Represent the network keypad; its enabled state follows TCP availability."""
 
     _attr_translation_key = "network_remote"
     _attr_icon = "mdi:remote"
@@ -35,9 +35,8 @@ class AvrNetworkRemote(AvrEntity, RemoteEntity):
         return self.coordinator.data.reachable
 
     @property
-    def is_on(self) -> bool | None:
-        power = self.coordinator.data.power
-        return None if power is None else power == "on"
+    def is_on(self) -> bool:
+        return self.coordinator.data.reachable
 
     @property
     def extra_state_attributes(self) -> dict:

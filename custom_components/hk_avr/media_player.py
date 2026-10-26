@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CONF_WAKE_REMOTE, SOURCES
+from .const import SOURCES
 from .entity import AvrEntity
 
 PARALLEL_UPDATES = 0
@@ -41,17 +41,11 @@ class AvrMediaPlayer(AvrEntity, MediaPlayerEntity):
 
     @property
     def available(self) -> bool:
-        return bool(self.coordinator.data.reachable
-                    or self.coordinator.entry.data.get(CONF_WAKE_REMOTE))
+        return self.coordinator.last_update_success
 
     @property
-    def state(self) -> MediaPlayerState | None:
-        power = self.coordinator.data.power
-        if power == "on":
-            return MediaPlayerState.ON
-        if power == "off":
-            return MediaPlayerState.OFF
-        return None
+    def state(self) -> MediaPlayerState:
+        return MediaPlayerState.ON if self.coordinator.data.reachable else MediaPlayerState.OFF
 
     @property
     def source(self) -> str | None:
@@ -60,7 +54,8 @@ class AvrMediaPlayer(AvrEntity, MediaPlayerEntity):
     @property
     def extra_state_attributes(self) -> dict:
         return {"network_reachable": self.coordinator.data.reachable,
-                "state_feedback": "optimistic",
+                "state_feedback": "tcp_reachability",
+                "last_commanded_power": self.coordinator.data.power,
                 "last_command_transport": self.coordinator.data.last_transport}
 
     async def async_turn_on(self) -> None:
