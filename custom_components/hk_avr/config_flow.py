@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import ipaddress
+import logging
 import re
 
 try:
@@ -32,6 +33,7 @@ from .const import (
 
 CONF_LEARN_POWER_ON = "learn_power_on"
 LEARN_SERVICE_TIMEOUT = 45
+_LOGGER = logging.getLogger(__name__)
 
 
 def normalize_host(host: str) -> str:
@@ -139,11 +141,21 @@ class AvrConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_learn_confirm(self, user_input=None):
         """Only an explicit submission starts the remote's learning mode."""
+        errors = {}
         if user_input is not None:
-            self._learn_task = None
-            return await self.async_step_learn_progress()
+            remote = self.hass.states.get(self._pending[CONF_WAKE_REMOTE])
+            if remote is None or remote.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+                errors["base"] = "learn_remote_unavailable"
+            elif remote.state == "off":
+                errors["base"] = "learn_remote_off"
+            elif not self.hass.services.has_service("remote", "learn_command"):
+                errors["base"] = "learn_service_unavailable"
+            else:
+                self._learn_error_detail = ""
+                self._learn_task = None
+                return await self.async_step_learn_progress()
         return self.async_show_form(
-            step_id="learn_confirm", data_schema=vol.Schema({}),
+            step_id="learn_confirm", data_schema=vol.Schema({}), errors=errors,
             description_placeholders={
                 "remote": self._pending[CONF_WAKE_REMOTE],
                 "device": self._pending[CONF_WAKE_DEVICE],
@@ -151,11 +163,13 @@ class AvrConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def _async_learn(self) -> bool:
+    async def _async_learn(self) -> str | None:
         """Bound the learning service; never transmit or retry automatically."""
         remote = self.hass.states.get(self._pending[CONF_WAKE_REMOTE])
-        if remote is None or remote.state in (STATE_UNAVAILABLE, STATE_UNKNOWN, "off"):
-            return False
+        if remote is None or remote.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            return "learn_remote_unavailable"
+        if remote.state == "off":
+            return "learn_remote_off"
         try:
             async with asyncio.timeout(LEARN_SERVICE_TIMEOUT):
                 await self.hass.services.async_call("remote", "learn_command", {
@@ -164,21 +178,47 @@ class AvrConfigFlow(ConfigFlow, domain=DOMAIN):
                     "command": self._pending[CONF_WAKE_COMMAND],
                     "command_type": "ir", "timeout": 30,
                 }, blocking=True)
-        except (HomeAssistantError, TimeoutError):
-            return False
-        return True
+        except TimeoutError:
+            return "learn_timeout"
+        except (HomeAssistantError, vol.Invalid) as err:
+            self._learn_error_detail = self._learning_error_types(err)
+            _LOGGER.warning("IR learning request failed (%s)", self._learn_error_detail)
+            return "learn_service_failed"
+        except Exception as err:  # A third-party provider must not break the wizard.
+            self._learn_error_detail = self._learning_error_types(err)
+            _LOGGER.error("Unexpected IR learning failure (%s)", self._learn_error_detail)
+            return "learn_service_failed"
+        return None
+
+    @staticmethod
+    def _learning_error_types(error):
+        """Identify provider failures without exposing payloads, addresses or tokens."""
+        names = []
+        for _ in range(4):
+            names.append(type(error).__name__)
+            error = error.__cause__
+            if error is None:
+                break
+        return " / ".join(names)
 
     async def async_step_learn_progress(self, user_input=None):
         if self._learn_task is None:
             self._learn_task = self.hass.async_create_task(self._async_learn())
+            # Always register the task with the flow manager before completing it,
+            # including a provider which returns or fails synchronously.
+            return self.async_show_progress(
+                step_id="learn_progress", progress_action="learn_power_on",
+                progress_task=self._learn_task,
+            )
         if not self._learn_task.done():
             return self.async_show_progress(
                 step_id="learn_progress", progress_action="learn_power_on",
                 progress_task=self._learn_task,
             )
-        success = not self._learn_task.cancelled() and self._learn_task.result()
+        self._learn_error = ("learn_service_failed" if self._learn_task.cancelled()
+                             else self._learn_task.result())
         return self.async_show_progress_done(
-            next_step_id="learn_done" if success else "learn_failed",
+            next_step_id="learn_failed" if self._learn_error else "learn_done",
         )
 
     async def async_step_learn_done(self, user_input=None):
@@ -187,8 +227,17 @@ class AvrConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="learn_done", data_schema=vol.Schema({}))
 
     async def async_step_learn_failed(self, user_input=None):
+        if user_input is not None:
+            return await self.async_step_learn_retry()
+        return self.async_show_form(
+            step_id="learn_failed", data_schema=vol.Schema({}),
+            errors={"base": self._learn_error},
+            description_placeholders={"error_type": self._learn_error_detail or "—"},
+        )
+
+    async def async_step_learn_retry(self, user_input=None):
         return self.async_show_menu(
-            step_id="learn_failed", menu_options=["learn_confirm", "save_without_learning"],
+            step_id="learn_retry", menu_options=["learn_confirm", "save_without_learning"],
         )
 
     async def async_step_save_without_learning(self, user_input=None):

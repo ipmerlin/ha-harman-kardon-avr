@@ -92,13 +92,17 @@ async def test_failed_learning_has_no_automatic_retry(hass, config_data, learner
     learner["error"] = error
     flow_id = await start_learning(hass, config_data, learner)
     result = await finish_learning(hass, flow_id, learner)
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "learn_failed"
+    assert result["errors"]["base"] == (
+        "learn_timeout" if isinstance(error, TimeoutError) else "learn_service_failed")
     assert not hass.config_entries.async_entries(DOMAIN)
     assert len(learner["calls"]) == 1
     # Refreshing the failure screen never relearns or saves implicitly.
     await hass.config_entries.flow.async_configure(flow_id)
     assert len(learner["calls"]) == 1
+    result = await hass.config_entries.flow.async_configure(flow_id, {})
+    assert result["step_id"] == "learn_retry"
     result = await hass.config_entries.flow.async_configure(flow_id, {
         "next_step_id": "save_without_learning",
     })
@@ -110,6 +114,7 @@ async def test_retry_requires_another_explicit_confirmation(hass, config_data, l
     learner["error"] = HomeAssistantError("test")
     flow_id = await start_learning(hass, config_data, learner)
     await finish_learning(hass, flow_id, learner)
+    await hass.config_entries.flow.async_configure(flow_id, {})
     result = await hass.config_entries.flow.async_configure(flow_id, {"next_step_id": "learn_confirm"})
     assert result["step_id"] == "learn_confirm"
     assert len(learner["calls"]) == 1
@@ -119,6 +124,51 @@ async def test_retry_requires_another_explicit_confirmation(hass, config_data, l
     result = await finish_learning(hass, flow_id, learner)
     assert result["step_id"] == "learn_done"
     assert len(learner["calls"]) == 2
+    hass.config_entries.flow.async_abort(flow_id)
+
+
+@pytest.mark.parametrize("state, reason", [
+    ("off", "learn_remote_off"),
+    ("unavailable", "learn_remote_unavailable"),
+    ("unknown", "learn_remote_unavailable"),
+    (None, "learn_remote_unavailable"),
+])
+async def test_invalid_remote_stays_on_confirmation_with_reason(hass, config_data, learner, state, reason):
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "user"},
+        data={**config_data, "wake_remote": "remote.xiaomi_ir", "learn_power_on": True})
+    if state is None:
+        hass.states.async_remove("remote.xiaomi_ir")
+    else:
+        hass.states.async_set("remote.xiaomi_ir", state)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["step_id"] == "learn_confirm"
+    assert result["errors"] == {"base": reason}
+    assert not learner["calls"]
+    hass.config_entries.flow.async_abort(result["flow_id"])
+
+
+async def test_instant_provider_failure_is_visible_and_never_retried(hass, config_data, learner):
+    async def fail(call):
+        learner["calls"].append(call.data)
+        try:
+            raise ValueError("private provider payload")
+        except ValueError as err:
+            raise HomeAssistantError("private wrapper") from err
+
+    hass.services.async_register("remote", "learn_command", fail)
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "user"},
+        data={**config_data, "wake_remote": "remote.xiaomi_ir", "learn_power_on": True})
+    flow_id = result["flow_id"]
+    result = await hass.config_entries.flow.async_configure(flow_id, {})
+    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(flow_id)
+    assert result["step_id"] == "learn_failed"
+    assert result["errors"] == {"base": "learn_service_failed"}
+    assert result["description_placeholders"]["error_type"] == "HomeAssistantError / ValueError"
+    assert "private" not in str(result)
+    await hass.config_entries.flow.async_configure(flow_id)
+    assert len(learner["calls"]) == 1
     hass.config_entries.flow.async_abort(flow_id)
 
 

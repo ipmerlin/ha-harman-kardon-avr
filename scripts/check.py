@@ -29,6 +29,7 @@ for lang in ("en", "ru"):
     translated = json.loads((COMPONENT / f"translations/{lang}.json").read_text(encoding="utf-8"))
     assert set(translated["config"]["step"]) == {
         "user", "reconfigure", "offline", "learn_confirm", "learn_progress", "learn_done", "learn_failed",
+        "learn_retry",
     }
     assert "Broadlink" not in json.dumps(translated["config"])
     assert "learn_power_on" in translated["config"]["progress"]

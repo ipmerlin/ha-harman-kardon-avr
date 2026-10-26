@@ -108,13 +108,22 @@ def translation(ru=False):
                 "learn_failed": {
                     "title": "Обучение не подтверждено" if ru else "Learning not confirmed",
                     "description": (
-                        "Не удалось подтвердить обучение: проверьте, что ИК-пульт включён и доступен. "
-                        "Повторите обучение или сохраните настройки без него. Необученная команда "
-                        "не сможет включить ресивер. Автоматического повтора нет."
+                        "Обучение остановлено. Тип ошибки пульта: {error_type}. "
+                        "Причина указана ниже. Нажмите «Подтвердить», чтобы перейти к выбору: "
+                        "повторить обучение или сохранить без него. Настройки пока не сохранены."
                         if ru else
-                        "Learning could not be confirmed. Check that the IR remote is enabled and "
-                        "available. Retry or save without learning. An unlearned command cannot wake "
-                        "the AVR. Learning is not retried automatically."
+                        "Learning stopped. Remote error type: {error_type}. See the reason below. "
+                        "Submit to choose retry or save without learning. Settings have not been saved."
+                    ),
+                },
+                "learn_retry": {
+                    "title": "Дальнейшие действия" if ru else "Next action",
+                    "description": (
+                        "Повторите после устранения причины или сохраните без обучения. "
+                        "Необученная команда не сможет включить ресивер."
+                        if ru else
+                        "Retry after resolving the error, or save without learning. "
+                        "An unlearned command cannot wake the AVR."
                     ),
                     "menu_options": {
                         "learn_confirm": "Повторить обучение" if ru else "Retry learning",
@@ -144,6 +153,26 @@ def translation(ru=False):
                 ),
             },
             "error": {
+                "learn_remote_off": (
+                    "ИК-пульт выключен в HA. Включите выбранную сущность remote и повторите."
+                    if ru else "The IR remote is disabled in HA. Turn on the selected remote entity and retry."
+                ),
+                "learn_remote_unavailable": (
+                    "ИК-пульт недоступен. Проверьте его питание, сеть и интеграцию."
+                    if ru else "The IR remote is unavailable. Check its power, network and integration."
+                ),
+                "learn_service_unavailable": (
+                    "Действие remote.learn_command недоступно. Проверьте загрузку интеграции ИК-пульта."
+                    if ru else "remote.learn_command is unavailable. Check that the IR integration is loaded."
+                ),
+                "learn_timeout": (
+                    "Время ожидания истекло. Дождитесь режима обучения и нажмите Power On в течение 30 секунд."
+                    if ru else "Learning timed out. Wait for learning mode and press Power On within 30 seconds."
+                ),
+                "learn_service_failed": (
+                    "Интеграция ИК-пульта вернула ошибку обучения. Проверьте её журнал и действие remote.learn_command."
+                    if ru else "The IR integration returned a learning error. Check its log and remote.learn_command."
+                ),
                 "cannot_connect": (
                     "Нет TCP-соединения. Включите ресивер, проверьте адрес и порт или выберите ИК-пульт."
                     if ru else "Cannot connect. Turn on the receiver, check host/port, or select an IR remote."

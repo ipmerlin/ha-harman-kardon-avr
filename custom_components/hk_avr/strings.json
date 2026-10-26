@@ -62,7 +62,11 @@
       },
       "learn_failed": {
         "title": "Learning not confirmed",
-        "description": "Learning could not be confirmed. Check that the IR remote is enabled and available. Retry or save without learning. An unlearned command cannot wake the AVR. Learning is not retried automatically.",
+        "description": "Learning stopped. Remote error type: {error_type}. See the reason below. Submit to choose retry or save without learning. Settings have not been saved."
+      },
+      "learn_retry": {
+        "title": "Next action",
+        "description": "Retry after resolving the error, or save without learning. An unlearned command cannot wake the AVR.",
         "menu_options": {
           "learn_confirm": "Retry learning",
           "save_without_learning": "Save without learning"
@@ -77,6 +81,11 @@
       "learn_power_on": "Wait for the transmitter signal or HA notification, then point the original remote at it and press Power On. Waiting up to 30 seconds."
     },
     "error": {
+      "learn_remote_off": "The IR remote is disabled in HA. Turn on the selected remote entity and retry.",
+      "learn_remote_unavailable": "The IR remote is unavailable. Check its power, network and integration.",
+      "learn_service_unavailable": "remote.learn_command is unavailable. Check that the IR integration is loaded.",
+      "learn_timeout": "Learning timed out. Wait for learning mode and press Power On within 30 seconds.",
+      "learn_service_failed": "The IR integration returned a learning error. Check its log and remote.learn_command.",
       "cannot_connect": "Cannot connect. Turn on the receiver, check host/port, or select an IR remote.",
       "invalid_config": "Check the host, name and IR command fields."
     },
