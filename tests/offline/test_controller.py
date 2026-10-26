@@ -62,7 +62,7 @@ class ControllerTests(unittest.IsolatedAsyncioTestCase):
         self.wake.assert_awaited_once()
         self.client.async_send.assert_not_awaited()
         self.assertTrue(self.avr.snapshot.reachable)
-        self.assertEqual(self.avr.snapshot.last_transport, "broadlink")
+        self.assertEqual(self.avr.snapshot.last_transport, "infrared")
 
     async def test_wake_timeout_is_not_success(self):
         self.client.async_probe.return_value = False

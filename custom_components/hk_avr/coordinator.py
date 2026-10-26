@@ -1,4 +1,4 @@
-"""Bridge HA, the AVR transport and Broadlink's existing HA integration."""
+"""Bridge HA, the AVR transport and a selected learned-command IR remote."""
 
 import asyncio
 import logging
@@ -40,7 +40,7 @@ class AvrCoordinator(DataUpdateCoordinator[Snapshot]):
         remote = self.hass.states.get(self.entry.data[CONF_WAKE_REMOTE])
         if remote is None or remote.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             raise HomeAssistantError(
-                "Configured Broadlink remote is missing or unavailable. Check the wake settings."
+                "Configured IR remote is missing or unavailable. Check the wake settings."
             )
         try:
             async with asyncio.timeout(15):
@@ -53,7 +53,7 @@ class AvrCoordinator(DataUpdateCoordinator[Snapshot]):
                 )
         except TimeoutError as err:
             raise HomeAssistantError(
-                "Broadlink did not finish sending within 15 seconds. Check Broadlink availability."
+                "IR remote did not finish sending within 15 seconds. Check its availability."
             ) from err
 
     async def _async_update_data(self) -> Snapshot:
@@ -68,11 +68,11 @@ class AvrCoordinator(DataUpdateCoordinator[Snapshot]):
                 await self.controller.async_command(command, parameter)
         except WakeRequiredError as err:
             raise HomeAssistantError(
-                "Ethernet is unavailable. Configure Broadlink wake or use the physical remote."
+                "Ethernet is unavailable. Configure IR wake or use the physical remote."
             ) from err
         except WakeTimeoutError as err:
             raise HomeAssistantError(
-                "Broadlink command sent, but AVR Ethernet did not return. "
+                "IR command sent, but AVR Ethernet did not return. "
                 "Check the learned Power On command, IR visibility and receiver IP."
             ) from err
         except AvrConnectionError as err:

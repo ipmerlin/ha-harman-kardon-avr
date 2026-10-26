@@ -25,6 +25,7 @@ from .const import (
     DEFAULT_WAKE_DEVICE,
     DEFAULT_WAKE_TIMEOUT,
     DOMAIN,
+    WAKE_REMOTE_INTEGRATIONS,
 )
 
 
@@ -44,7 +45,7 @@ def normalize_host(host: str) -> str:
 
 
 def schema(defaults: dict) -> vol.Schema:
-    """Keep connection and optional Broadlink configuration in one form."""
+    """Keep connection and optional supported IR remotes in one form."""
     remote_default = defaults.get(CONF_WAKE_REMOTE)
     remote_key = (vol.Optional(CONF_WAKE_REMOTE, default=remote_default)
                   if remote_default else vol.Optional(CONF_WAKE_REMOTE))
@@ -54,7 +55,10 @@ def schema(defaults: dict) -> vol.Schema:
         vol.Required(CONF_PORT, default=defaults.get(CONF_PORT, DEFAULT_PORT)):
             vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
         remote_key: selector.EntitySelector(
-            selector.EntitySelectorConfig(domain="remote", integration="broadlink")),
+            selector.EntitySelectorConfig(filter=[
+                {"domain": "remote", "integration": integration}
+                for integration in WAKE_REMOTE_INTEGRATIONS
+            ])),
         vol.Required(CONF_WAKE_DEVICE, default=defaults.get(
             CONF_WAKE_DEVICE, DEFAULT_WAKE_DEVICE)): str,
         vol.Required(CONF_WAKE_COMMAND, default=defaults.get(

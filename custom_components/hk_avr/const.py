@@ -8,6 +8,7 @@ CONF_WAKE_REMOTE = "wake_remote"
 CONF_WAKE_DEVICE = "wake_device"
 CONF_WAKE_COMMAND = "wake_command"
 CONF_WAKE_TIMEOUT = "wake_timeout"
+WAKE_REMOTE_INTEGRATIONS = ("broadlink", "xiaomi_ir")
 DEFAULT_WAKE_DEVICE = "harman_kardon"
 DEFAULT_WAKE_COMMAND = "power_on"
 SOURCES = (

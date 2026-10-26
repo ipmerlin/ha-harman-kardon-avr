@@ -1,4 +1,4 @@
-"""Harman Kardon AVR 151S with optional Broadlink wake."""
+"""Harman Kardon AVR 151S with optional IR wake."""
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
@@ -22,7 +22,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     await coordinator.async_refresh()
     if not coordinator.data.reachable and not entry.data.get(CONF_WAKE_REMOTE):
-        raise ConfigEntryNotReady("AVR is unreachable; turn it on or configure Broadlink wake")
+        raise ConfigEntryNotReady("AVR is unreachable; turn it on or configure IR wake")
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

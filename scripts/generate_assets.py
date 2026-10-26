@@ -10,14 +10,14 @@ COMPONENT = ROOT / "custom_components/hk_avr"
 
 FIELDS_EN = {
     "name": "Name", "host": "IP address or hostname", "port": "TCP port",
-    "wake_remote": "Broadlink remote (optional)",
-    "wake_device": "Learned device name in Broadlink",
+    "wake_remote": "IR remote: Broadlink / Xiaomi IR (optional)",
+    "wake_device": "Learned device name in the IR remote",
     "wake_command": "Learned Power On command", "wake_timeout": "Wake timeout (seconds)",
 }
 FIELDS_RU = {
     "name": "Название", "host": "IP-адрес или имя хоста", "port": "TCP-порт",
-    "wake_remote": "Пульт Broadlink (необязательно)",
-    "wake_device": "Имя обученного устройства в Broadlink",
+    "wake_remote": "ИК-пульт: Broadlink / Xiaomi IR (необязательно)",
+    "wake_device": "Имя обученного устройства в ИК-пульте",
     "wake_command": "Обученная команда Power On", "wake_timeout": "Ожидание включения (секунды)",
 }
 DESCRIPTIONS_EN = {
@@ -61,10 +61,10 @@ def translation(ru=False):
     form = {
         "title": "Harman Kardon AVR 151S",
         "description": (
-            "Управление по Ethernet; Broadlink включает ресивер из глубокого сна. "
+            "Управление по Ethernet; Broadlink или Xiaomi IR включает ресивер из глубокого сна. "
             "При сохранении проверяется только TCP, команды питания не отправляются."
             if ru else
-            "Control over Ethernet, with optional Broadlink wake from deep standby. "
+            "Control over Ethernet, with optional Broadlink or Xiaomi IR wake from deep standby. "
             "Setup checks TCP only and never sends power commands."
         ),
         "data": fields, "data_description": descriptions,
@@ -77,10 +77,10 @@ def translation(ru=False):
                     "title": "Ресивер недоступен" if ru else "Receiver unreachable",
                     "description": (
                         "TCP-соединение не установлено. Можно сохранить настройки спящего "
-                        "ресивера с Broadlink, но IP-адрес и протокол пока не проверены. "
+                        "ресивера с ИК-пультом, но IP-адрес и протокол пока не проверены. "
                         "Команда включения не отправляется. Нажмите «Отправить», чтобы сохранить."
                         if ru else
-                        "TCP connection failed. You can save a sleeping receiver with Broadlink, "
+                        "TCP connection failed. You can save a sleeping receiver with an IR remote, "
                         "but the address and protocol have not been verified. No wake command "
                         "will be sent. Submit to save anyway."
                     ),
@@ -88,8 +88,8 @@ def translation(ru=False):
             },
             "error": {
                 "cannot_connect": (
-                    "Нет TCP-соединения. Включите ресивер, проверьте адрес и порт или выберите Broadlink."
-                    if ru else "Cannot connect. Turn on the receiver, check host/port, or select Broadlink."
+                    "Нет TCP-соединения. Включите ресивер, проверьте адрес и порт или выберите ИК-пульт."
+                    if ru else "Cannot connect. Turn on the receiver, check host/port, or select an IR remote."
                 ),
                 "invalid_config": (
                     "Проверьте адрес, название и заполнение параметров ИК-команды."

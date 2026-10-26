@@ -89,6 +89,14 @@ class FlowContractTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result["step_id"], "user")
         self.assertEqual(len(result["data_schema"].schema), 7)
 
+    async def test_ir_selector_includes_xiaomi_and_broadlink(self):
+        form = flow_module.schema({})
+        remote = next(value for key, value in form.schema.items() if key.schema == "wake_remote")
+        self.assertEqual(remote.config["filter"], [
+            {"domain": "remote", "integration": "broadlink"},
+            {"domain": "remote", "integration": "xiaomi_ir"},
+        ])
+
     async def test_schema_populates_defaults(self):
         result = await self.flow.async_step_user()
         data = result["data_schema"]({"host": "192.0.2.15"})

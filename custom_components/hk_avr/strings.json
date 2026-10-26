@@ -3,13 +3,13 @@
     "step": {
       "user": {
         "title": "Harman Kardon AVR 151S",
-        "description": "Control over Ethernet, with optional Broadlink wake from deep standby. Setup checks TCP only and never sends power commands.",
+        "description": "Control over Ethernet, with optional Broadlink or Xiaomi IR wake from deep standby. Setup checks TCP only and never sends power commands.",
         "data": {
           "name": "Name",
           "host": "IP address or hostname",
           "port": "TCP port",
-          "wake_remote": "Broadlink remote (optional)",
-          "wake_device": "Learned device name in Broadlink",
+          "wake_remote": "IR remote: Broadlink / Xiaomi IR (optional)",
+          "wake_device": "Learned device name in the IR remote",
           "wake_command": "Learned Power On command",
           "wake_timeout": "Wake timeout (seconds)"
         },
@@ -25,13 +25,13 @@
       },
       "reconfigure": {
         "title": "Harman Kardon AVR 151S",
-        "description": "Control over Ethernet, with optional Broadlink wake from deep standby. Setup checks TCP only and never sends power commands.",
+        "description": "Control over Ethernet, with optional Broadlink or Xiaomi IR wake from deep standby. Setup checks TCP only and never sends power commands.",
         "data": {
           "name": "Name",
           "host": "IP address or hostname",
           "port": "TCP port",
-          "wake_remote": "Broadlink remote (optional)",
-          "wake_device": "Learned device name in Broadlink",
+          "wake_remote": "IR remote: Broadlink / Xiaomi IR (optional)",
+          "wake_device": "Learned device name in the IR remote",
           "wake_command": "Learned Power On command",
           "wake_timeout": "Wake timeout (seconds)"
         },
@@ -47,11 +47,11 @@
       },
       "offline": {
         "title": "Receiver unreachable",
-        "description": "TCP connection failed. You can save a sleeping receiver with Broadlink, but the address and protocol have not been verified. No wake command will be sent. Submit to save anyway."
+        "description": "TCP connection failed. You can save a sleeping receiver with an IR remote, but the address and protocol have not been verified. No wake command will be sent. Submit to save anyway."
       }
     },
     "error": {
-      "cannot_connect": "Cannot connect. Turn on the receiver, check host/port, or select Broadlink.",
+      "cannot_connect": "Cannot connect. Turn on the receiver, check host/port, or select an IR remote.",
       "invalid_config": "Check the host, name and IR command fields."
     },
     "abort": {

@@ -78,7 +78,7 @@ class AvrController:
                     raise WakeRequiredError
                 # No retries: learn a discrete POWER ON, never a power toggle.
                 await self.wake()
-                self.snapshot = replace(self.snapshot, last_transport="broadlink")
+                self.snapshot = replace(self.snapshot, last_transport="infrared")
                 try:
                     async with asyncio.timeout(self.wake_timeout):
                         while not await self.client.async_probe():
@@ -101,7 +101,7 @@ class AvrController:
                 self.snapshot = replace(self.snapshot, source=parameter)
 
     async def async_network_turn_on(self) -> None:
-        """Explicit Ethernet-only power on, without Broadlink fallback."""
+        """Explicit Ethernet-only power on, without IR fallback."""
         async with self._lock:
             await self._send("power-on")
             self.snapshot = replace(self.snapshot, power="on")

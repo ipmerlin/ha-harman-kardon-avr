@@ -1,4 +1,4 @@
-"""Receiver controls with Broadlink wake support."""
+"""Receiver controls with learned-command IR wake support."""
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
@@ -23,7 +23,7 @@ async def async_setup_entry(
 
 
 class AvrMediaPlayer(AvrEntity, MediaPlayerEntity):
-    """Keep turn-on callable while asleep when Broadlink is configured."""
+    """Keep turn-on callable while asleep when an IR remote is configured."""
 
     _attr_name = None
     _attr_device_class = MediaPlayerDeviceClass.RECEIVER
