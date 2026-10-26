@@ -118,14 +118,14 @@ class ControllerTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(snapshot.power, "off")
         self.assertFalse(snapshot.reachable)
 
-    async def test_reconnection_clears_stale_power_off_assumption(self):
+    async def test_reconnection_retains_last_explicit_power_off(self):
         await self.avr.async_command("power-off")
         self.client.async_probe.return_value = False
         await self.avr.async_refresh()
         self.client.async_probe.return_value = True
         snapshot = await self.avr.async_refresh()
         self.assertTrue(snapshot.reachable)
-        self.assertIsNone(snapshot.power)
+        self.assertEqual(snapshot.power, "off")
 
     async def test_unknown_source_is_not_sent(self):
         with self.assertRaises(ValueError):

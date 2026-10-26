@@ -52,10 +52,9 @@ class AvrController:
     async def async_refresh(self) -> Snapshot:
         async with self._lock:
             if await self.client.async_probe():
-                self.snapshot = replace(
-                    self.snapshot, reachable=True,
-                    power=self.snapshot.power if self.snapshot.reachable else None,
-                )
+                # TCP returning is not a power-on report. Keep the last explicit
+                # shutdown assumption; _offline already clears a lost "on" state.
+                self.snapshot = replace(self.snapshot, reachable=True)
             else:
                 self._offline()
             return self.snapshot
