@@ -57,8 +57,8 @@
         "title": "Waiting for Power On"
       },
       "learn_done": {
-        "title": "Command learned",
-        "description": "The IR remote completed learning. Submit to save the receiver configuration. Transmission and physical power-on have not been tested."
+        "title": "Learning request completed",
+        "description": "The IR remote finished handling the learning request. Submit to save, then test receiver power-on. The wizard does not inspect the command library or transmit the power command."
       },
       "learn_failed": {
         "title": "Learning not confirmed",

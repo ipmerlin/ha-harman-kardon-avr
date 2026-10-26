@@ -94,13 +94,15 @@ def translation(ru=False):
                 },
                 "learn_progress": {"title": "Ожидание Power On" if ru else "Waiting for Power On"},
                 "learn_done": {
-                    "title": "Команда обучена" if ru else "Command learned",
+                    "title": "Запрос обучения завершён" if ru else "Learning request completed",
                     "description": (
-                        "ИК-пульт завершил обучение. Нажмите «Подтвердить», чтобы сохранить настройки "
-                        "ресивера. Передача команды и фактическое включение ещё не проверялись."
+                        "ИК-пульт завершил обработку обучения. Нажмите «Подтвердить», чтобы сохранить "
+                        "настройки, затем проверьте включение ресивера. Мастер не проверяет наличие "
+                        "кода в библиотеке и сам не передаёт команду питания."
                         if ru else
-                        "The IR remote completed learning. Submit to save the receiver configuration. "
-                        "Transmission and physical power-on have not been tested."
+                        "The IR remote finished handling the learning request. Submit to save, then "
+                        "test receiver power-on. The wizard does not inspect the command library "
+                        "or transmit the power command."
                     ),
                 },
                 "learn_failed": {
