@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import ipaddress
 import re
 
@@ -10,7 +11,8 @@ try:
 except ImportError:  # Home Assistant versions before the schema-library migration.
     import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
 
 from .api import AvrClient
@@ -27,6 +29,9 @@ from .const import (
     DOMAIN,
     WAKE_REMOTE_INTEGRATIONS,
 )
+
+CONF_LEARN_POWER_ON = "learn_power_on"
+LEARN_SERVICE_TIMEOUT = 45
 
 
 def normalize_host(host: str) -> str:
@@ -66,6 +71,7 @@ def schema(defaults: dict) -> vol.Schema:
         vol.Required(CONF_WAKE_TIMEOUT, default=defaults.get(
             CONF_WAKE_TIMEOUT, DEFAULT_WAKE_TIMEOUT)):
             vol.All(vol.Coerce(int), vol.Range(min=5, max=120)),
+        vol.Optional(CONF_LEARN_POWER_ON, default=False): bool,
     })
 
 
@@ -85,11 +91,14 @@ class AvrConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             defaults = dict(user_input)
             data = dict(user_input)
+            self._learn_requested = data.pop(CONF_LEARN_POWER_ON, False)
             try:
                 data[CONF_HOST] = normalize_host(data[CONF_HOST])
                 data[CONF_NAME] = data[CONF_NAME].strip()
                 if not data[CONF_NAME]:
                     raise ValueError("Empty name")
+                if self._learn_requested and not data.get(CONF_WAKE_REMOTE):
+                    raise ValueError("Select an IR remote to learn")
                 for field in (CONF_WAKE_DEVICE, CONF_WAKE_COMMAND):
                     data[field] = data[field].strip()
                     if data.get(CONF_WAKE_REMOTE) and not data[field]:
@@ -106,8 +115,10 @@ class AvrConfigFlow(ConfigFlow, domain=DOMAIN):
                     ):
                         return self.async_abort(reason="already_configured")
                 reachable = await AvrClient(data[CONF_HOST], data[CONF_PORT]).async_probe()
+                self._pending = data
+                self._pending_entry = entry
                 if reachable:
-                    return self._finish(data, entry)
+                    return await self._async_ready()
                 if data.get(CONF_WAKE_REMOTE):
                     self._pending = data
                     self._pending_entry = entry
@@ -118,8 +129,70 @@ class AvrConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_offline(self, user_input=None):
         """Ask before saving an unverified, sleeping endpoint; never wake on setup."""
         if user_input is not None:
-            return self._finish(self._pending, self._pending_entry)
+            return await self._async_ready()
         return self.async_show_form(step_id="offline", data_schema=vol.Schema({}))
+
+    async def _async_ready(self):
+        if self._learn_requested:
+            return await self.async_step_learn_confirm()
+        return self._finish(self._pending, self._pending_entry)
+
+    async def async_step_learn_confirm(self, user_input=None):
+        """Only an explicit submission starts the remote's learning mode."""
+        if user_input is not None:
+            self._learn_task = None
+            return await self.async_step_learn_progress()
+        return self.async_show_form(
+            step_id="learn_confirm", data_schema=vol.Schema({}),
+            description_placeholders={
+                "remote": self._pending[CONF_WAKE_REMOTE],
+                "device": self._pending[CONF_WAKE_DEVICE],
+                "command": self._pending[CONF_WAKE_COMMAND],
+            },
+        )
+
+    async def _async_learn(self) -> bool:
+        """Bound the learning service; never transmit or retry automatically."""
+        remote = self.hass.states.get(self._pending[CONF_WAKE_REMOTE])
+        if remote is None or remote.state in (STATE_UNAVAILABLE, STATE_UNKNOWN, "off"):
+            return False
+        try:
+            async with asyncio.timeout(LEARN_SERVICE_TIMEOUT):
+                await self.hass.services.async_call("remote", "learn_command", {
+                    "entity_id": self._pending[CONF_WAKE_REMOTE],
+                    "device": self._pending[CONF_WAKE_DEVICE],
+                    "command": self._pending[CONF_WAKE_COMMAND],
+                    "command_type": "ir", "timeout": 30,
+                }, blocking=True)
+        except (HomeAssistantError, TimeoutError):
+            return False
+        return True
+
+    async def async_step_learn_progress(self, user_input=None):
+        if self._learn_task is None:
+            self._learn_task = self.hass.async_create_task(self._async_learn())
+        if not self._learn_task.done():
+            return self.async_show_progress(
+                step_id="learn_progress", progress_action="learn_power_on",
+                progress_task=self._learn_task,
+            )
+        success = not self._learn_task.cancelled() and self._learn_task.result()
+        return self.async_show_progress_done(
+            next_step_id="learn_done" if success else "learn_failed",
+        )
+
+    async def async_step_learn_done(self, user_input=None):
+        if user_input is not None:
+            return self._finish(self._pending, self._pending_entry)
+        return self.async_show_form(step_id="learn_done", data_schema=vol.Schema({}))
+
+    async def async_step_learn_failed(self, user_input=None):
+        return self.async_show_menu(
+            step_id="learn_failed", menu_options=["learn_confirm", "save_without_learning"],
+        )
+
+    async def async_step_save_without_learning(self, user_input=None):
+        return self._finish(self._pending, self._pending_entry)
 
     def _finish(self, data, entry):
         for other in self._async_current_entries():

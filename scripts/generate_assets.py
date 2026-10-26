@@ -10,33 +10,37 @@ COMPONENT = ROOT / "custom_components/hk_avr"
 
 FIELDS_EN = {
     "name": "Name", "host": "IP address or hostname", "port": "TCP port",
-    "wake_remote": "IR remote: Broadlink / Xiaomi IR (optional)",
-    "wake_device": "Learned device name in the IR remote",
-    "wake_command": "Learned Power On command", "wake_timeout": "Wake timeout (seconds)",
+    "wake_remote": "IR remote (optional)",
+    "wake_device": "Device name in the command library",
+    "wake_command": "Power On command name", "wake_timeout": "Wake timeout (seconds)",
+    "learn_power_on": "Learn Power On during setup",
 }
 FIELDS_RU = {
     "name": "Название", "host": "IP-адрес или имя хоста", "port": "TCP-порт",
-    "wake_remote": "ИК-пульт: Broadlink / Xiaomi IR (необязательно)",
-    "wake_device": "Имя обученного устройства в ИК-пульте",
-    "wake_command": "Обученная команда Power On", "wake_timeout": "Ожидание включения (секунды)",
+    "wake_remote": "ИК-пульт (необязательно)",
+    "wake_device": "Имя устройства в библиотеке команд",
+    "wake_command": "Имя команды Power On", "wake_timeout": "Ожидание включения (секунды)",
+    "learn_power_on": "Обучить Power On при настройке",
 }
 DESCRIPTIONS_EN = {
     "name": "A name for this receiver in Home Assistant.",
     "host": "Reserve the receiver's IP address in your router. Do not enter a URL.",
     "port": "The AVR 151S Remote TCP port, normally 10025.",
-    "wake_remote": "Used only when Ethernet is unreachable. Learn a discrete Power On first.",
-    "wake_device": "Exactly the device value used with remote.learn_command.",
-    "wake_command": "Exactly the command value used with remote.learn_command. Never use a power toggle.",
+    "wake_remote": "Used when Ethernet is unreachable. Select your IR transmitter.",
+    "wake_device": "Use an existing device name or choose one for learning below.",
+    "wake_command": "Use an existing command name or choose one for learning. Use discrete Power On.",
     "wake_timeout": "Maximum wait for TCP after the IR command. The IR command is sent once.",
+    "learn_power_on": "Optional. The next step explains learning before it starts. Uncheck to use an existing command.",
 }
 DESCRIPTIONS_RU = {
     "name": "Название ресивера в Home Assistant.",
     "host": "Закрепите IP-адрес ресивера в роутере. Вводите адрес без http://.",
     "port": "TCP-порт управления AVR 151S, обычно 10025.",
-    "wake_remote": "Используется, когда Ethernet недоступен. Сначала обучите отдельную команду Power On.",
-    "wake_device": "Точное значение device, указанное при обучении через remote.learn_command.",
-    "wake_command": "Точное значение command при обучении. Используйте Power On, а не переключатель питания.",
+    "wake_remote": "Используется, когда Ethernet недоступен. Выберите ваш ИК-передатчик.",
+    "wake_device": "Имя уже обученного устройства или новое имя для обучения ниже.",
+    "wake_command": "Имя существующей команды или новое имя для обучения. Используйте отдельную Power On.",
     "wake_timeout": "Сколько ждать TCP после ИК-команды. ИК-команда отправляется один раз.",
+    "learn_power_on": "Необязательно. Перед запуском появится инструкция. Оставьте выключенным для готовой команды.",
 }
 
 BUTTON_LABELS = {
@@ -61,10 +65,10 @@ def translation(ru=False):
     form = {
         "title": "Harman Kardon AVR 151S",
         "description": (
-            "Управление по Ethernet; Broadlink или Xiaomi IR включает ресивер из глубокого сна. "
+            "Управление по Ethernet; выбранный ИК-пульт включает ресивер из глубокого сна. "
             "При сохранении проверяется только TCP, команды питания не отправляются."
             if ru else
-            "Control over Ethernet, with optional Broadlink or Xiaomi IR wake from deep standby. "
+            "Control over Ethernet, with optional IR wake from deep standby. "
             "Setup checks TCP only and never sends power commands."
         ),
         "data": fields, "data_description": descriptions,
@@ -73,6 +77,48 @@ def translation(ru=False):
         "config": {
             "step": {
                 "user": form, "reconfigure": form,
+                "learn_confirm": {
+                    "title": "Обучение команды Power On" if ru else "Learn Power On",
+                    "description": (
+                        "Пульт: {remote}. Команда будет сохранена как {device} / {command}. "
+                        "Подготовьте штатный пульт ресивера. Нажмите «Подтвердить», дождитесь "
+                        "режима обучения и нажмите отдельную кнопку Power On, направив штатный "
+                        "пульт на ИК-передатчик. На нажатие отводится 30 секунд. "
+                        "Существующий код с этими именами будет заменён. Команда питания не отправляется."
+                        if ru else
+                        "Remote: {remote}. Save as {device} / {command}. Prepare the original AVR remote. "
+                        "Submit, wait for learning mode, then point it at the IR transmitter and press "
+                        "the discrete Power On button within 30 seconds. An existing code with these "
+                        "names will be replaced. No power command is transmitted."
+                    ),
+                },
+                "learn_progress": {"title": "Ожидание Power On" if ru else "Waiting for Power On"},
+                "learn_done": {
+                    "title": "Команда обучена" if ru else "Command learned",
+                    "description": (
+                        "ИК-пульт завершил обучение. Нажмите «Подтвердить», чтобы сохранить настройки "
+                        "ресивера. Передача команды и фактическое включение ещё не проверялись."
+                        if ru else
+                        "The IR remote completed learning. Submit to save the receiver configuration. "
+                        "Transmission and physical power-on have not been tested."
+                    ),
+                },
+                "learn_failed": {
+                    "title": "Обучение не подтверждено" if ru else "Learning not confirmed",
+                    "description": (
+                        "Не удалось подтвердить обучение: проверьте, что ИК-пульт включён и доступен. "
+                        "Повторите обучение или сохраните настройки без него. Необученная команда "
+                        "не сможет включить ресивер. Автоматического повтора нет."
+                        if ru else
+                        "Learning could not be confirmed. Check that the IR remote is enabled and "
+                        "available. Retry or save without learning. An unlearned command cannot wake "
+                        "the AVR. Learning is not retried automatically."
+                    ),
+                    "menu_options": {
+                        "learn_confirm": "Повторить обучение" if ru else "Retry learning",
+                        "save_without_learning": "Сохранить без обучения" if ru else "Save without learning",
+                    },
+                },
                 "offline": {
                     "title": "Ресивер недоступен" if ru else "Receiver unreachable",
                     "description": (
@@ -85,6 +131,15 @@ def translation(ru=False):
                         "will be sent. Submit to save anyway."
                     ),
                 },
+            },
+            "progress": {
+                "learn_power_on": (
+                    "Дождитесь сигнала ИК-передатчика или уведомления HA. Направьте на него штатный "
+                    "пульт и нажмите Power On. Ожидание — до 30 секунд."
+                    if ru else
+                    "Wait for the transmitter signal or HA notification, then point the original "
+                    "remote at it and press Power On. Waiting up to 30 seconds."
+                ),
             },
             "error": {
                 "cannot_connect": (

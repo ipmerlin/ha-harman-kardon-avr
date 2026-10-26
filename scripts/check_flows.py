@@ -63,6 +63,10 @@ for name in ("homeassistant", "homeassistant.config_entries", "homeassistant.con
 sys.modules["homeassistant.config_entries"].ConfigFlow = FlowAdapter
 const = sys.modules["homeassistant.const"]
 const.CONF_HOST, const.CONF_PORT, const.CONF_NAME = "host", "port", "name"
+const.STATE_UNAVAILABLE, const.STATE_UNKNOWN = "unavailable", "unknown"
+errors = ModuleType("homeassistant.exceptions")
+errors.HomeAssistantError = type("HomeAssistantError", (Exception,), {})
+sys.modules[errors.__name__] = errors
 selectors = sys.modules["homeassistant.helpers.selector"]
 selectors.EntitySelector = EntitySelectorAdapter
 selectors.EntitySelectorConfig = dict
@@ -87,7 +91,7 @@ class FlowContractTests(unittest.IsolatedAsyncioTestCase):
     async def test_form_fields(self):
         result = await self.flow.async_step_user()
         self.assertEqual(result["step_id"], "user")
-        self.assertEqual(len(result["data_schema"].schema), 7)
+        self.assertEqual(len(result["data_schema"].schema), 8)
 
     async def test_ir_selector_includes_xiaomi_and_broadlink(self):
         form = flow_module.schema({})

@@ -27,7 +27,11 @@ assert hacs["homeassistant"] == "2025.12.0"
 assert len(list((ROOT / "custom_components").iterdir())) == 1
 for lang in ("en", "ru"):
     translated = json.loads((COMPONENT / f"translations/{lang}.json").read_text(encoding="utf-8"))
-    assert set(translated["config"]["step"]) == {"user", "reconfigure", "offline"}
+    assert set(translated["config"]["step"]) == {
+        "user", "reconfigure", "offline", "learn_confirm", "learn_progress", "learn_done", "learn_failed",
+    }
+    assert "Broadlink" not in json.dumps(translated["config"])
+    assert "learn_power_on" in translated["config"]["progress"]
     constants = runpy.run_path(str(COMPONENT / "const.py"))
     assert set(translated["entity"]["button"]) == set(constants["NETWORK_BUTTONS"])
 assert json.loads((COMPONENT / "strings.json").read_text()) == json.loads(
